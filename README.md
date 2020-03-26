@@ -7,6 +7,8 @@ Stepes:
 - cd FER2013
 - kaggle competitions download -c challenges-in-representation-learning-facial-expression-recognition-challenge
 - unzip challenges-in-representation-learning-facial-expression-recognition-challenge.zip
+- tar -zxvf fer2013.tar.gz
+- cd ..
 - python setup_data_FER.py
 - python GAN_example.py
  

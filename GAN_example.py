@@ -99,7 +99,7 @@ random.seed(manualSeed)
 torch.manual_seed(manualSeed)
 
 # Root directory for dataset
-dataroot = "data/FERPlus"
+dataroot = "data/FER"
 gen_path = "Models/Gen_basic.trc"
 dis_path = "Models/Dis_basic.trc"
 
@@ -128,12 +128,12 @@ dataloader = torch.utils.data.DataLoader(dataset, batch_size=128,
 device = torch.device("cuda:0" if (torch.cuda.is_available() and ngpu > 0) else "cpu")
 
 # Plot some training images
-real_batch = next(iter(dataloader))
-plt.figure(figsize=(8, 8))
-plt.axis("off")
-plt.title("Training Images")
-plt.imshow(np.transpose(vutils.make_grid(real_batch[0].to(device)[:64], padding=2, normalize=True).cpu(), (1, 2, 0)))
-plt.show()
+# real_batch = next(iter(dataloader))
+# plt.figure(figsize=(8, 8))
+# plt.axis("off")
+# plt.title("Training Images")
+# plt.imshow(np.transpose(vutils.make_grid(real_batch[0].to(device)[:64], padding=2, normalize=True).cpu(), (1, 2, 0)))
+# plt.show()
 
 netG = Generator(ngpu).to(device)
 netD = Discriminator(ngpu).to(device)
@@ -231,44 +231,44 @@ torch.save(netD.state_dict(), dis_path)
 
 
 
-# Analysis
-plt.figure(figsize=(10, 5))
-plt.title("Generator and Discriminator Loss During Training")
-plt.plot(G_losses, label="G")
-plt.plot(D_losses, label="D")
-plt.xlabel("iterations")
-plt.ylabel("Loss")
-plt.legend()
-plt.show()
-
-# %%capture
-fig = plt.figure(figsize=(8, 8))
-plt.axis("off")
-ims = [[plt.imshow(np.transpose(i, (1, 2, 0)), animated=True)] for i in img_list]
-ani = animation.ArtistAnimation(fig, ims, interval=1000, repeat_delay=1000, blit=True)
-
-HTML(ani.to_jshtml())
-
-######################################################################
-# **Real Images vs. Fake Images**
+# # Analysis
+# plt.figure(figsize=(10, 5))
+# plt.title("Generator and Discriminator Loss During Training")
+# plt.plot(G_losses, label="G")
+# plt.plot(D_losses, label="D")
+# plt.xlabel("iterations")
+# plt.ylabel("Loss")
+# plt.legend()
+# plt.show()
 #
-# Finally, lets take a look at some real images and fake images side by
-# side.
+# # %%capture
+# fig = plt.figure(figsize=(8, 8))
+# plt.axis("off")
+# ims = [[plt.imshow(np.transpose(i, (1, 2, 0)), animated=True)] for i in img_list]
+# ani = animation.ArtistAnimation(fig, ims, interval=1000, repeat_delay=1000, blit=True)
 #
-
-# Grab a batch of real images from the dataloader
-real_batch = next(iter(dataloader))
-
-# Plot the real images
-plt.figure(figsize=(15, 15))
-plt.subplot(1, 2, 1)
-plt.axis("off")
-plt.title("Real Images")
-plt.imshow(np.transpose(vutils.make_grid(real_batch[0].to(device)[:64], padding=5, normalize=True).cpu(), (1, 2, 0)))
-
-# Plot the fake images from the last epoch
-plt.subplot(1, 2, 2)
-plt.axis("off")
-plt.title("Fake Images")
-plt.imshow(np.transpose(img_list[-1], (1, 2, 0)))
-plt.show()
+# HTML(ani.to_jshtml())
+#
+# ######################################################################
+# # **Real Images vs. Fake Images**
+# #
+# # Finally, lets take a look at some real images and fake images side by
+# # side.
+# #
+#
+# # Grab a batch of real images from the dataloader
+# real_batch = next(iter(dataloader))
+#
+# # Plot the real images
+# plt.figure(figsize=(15, 15))
+# plt.subplot(1, 2, 1)
+# plt.axis("off")
+# plt.title("Real Images")
+# plt.imshow(np.transpose(vutils.make_grid(real_batch[0].to(device)[:64], padding=5, normalize=True).cpu(), (1, 2, 0)))
+#
+# # Plot the fake images from the last epoch
+# plt.subplot(1, 2, 2)
+# plt.axis("off")
+# plt.title("Fake Images")
+# plt.imshow(np.transpose(img_list[-1], (1, 2, 0)))
+# plt.show()
