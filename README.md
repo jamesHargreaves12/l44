@@ -9,6 +9,7 @@ Stepes:
 - unzip challenges-in-representation-learning-facial-expression-recognition-challenge.zip
 - tar -zxvf fer2013.tar.gz
 - cd ..
+- mkdir models
 - python setup_data_FER.py
 - python GAN_example.py
  
