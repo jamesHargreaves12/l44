@@ -11,11 +11,9 @@ certifi==2019.11.28
 chardet==3.0.4
 constantly==15.1.0
 construct==2.10.56
-cudarray==0.1.dev0
 cycler==0.10.0
 Cython==0.29.16
 decorator==4.4.2
-deeppy==0.1.dev0
 defusedxml==0.6.0
 Django==3.0.4
 entrypoints==0.3
