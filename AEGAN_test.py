@@ -139,16 +139,16 @@ torch.manual_seed(manualSeed)
 
 # Root directory for dataset
 dataroot = "data/FER"
-gen_path = "Models/Gen_aegan.trc"
-dis_path = "Models/Dis_aegan.trc"
-enc_path = "Models/Enc_aegan.trc"
+gen_path = "models/Gen_aegan_2.trc"
+dis_path = "models/Dis_aegan_2.trc"
+enc_path = "models/Enc_aegan_2.trc"
 
 lambda_val = 0.1
 image_size = 48
 num_epochs = 100
 
 nc = 1  # Number of channels
-nz = 100  # Size of z latent vector (i.e. size of generator input)
+nz = 1  # Size of z latent vector (i.e. size of generator input)
 ngf = 64  # Size of feature maps in generator
 ndf = 64  # Size of feature maps in discriminator
 lr = 0.0002
@@ -277,7 +277,7 @@ for epoch in range(num_epochs):
 
 torch.save(netG.state_dict(), gen_path)
 torch.save(netD.state_dict(), dis_path)
-torch.save(netD.state_dict(), enc_path)
+torch.save(netE.state_dict(), enc_path)
 
 # # Analysis
 # plt.figure(figsize=(10, 5))
