@@ -66,3 +66,14 @@ def get_model_and_optimizer(model_class, model_path, cfg):
     initialise(network, model_path)
     print(network)
     return network, optimizer
+
+
+def reparameterize(mu, logvar):
+    std = torch.exp(0.5 * logvar)
+    eps = torch.randn_like(std)
+    return mu + eps * std
+
+
+def loss_function_kld(mu, logvar):
+    KLD = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
+    return KLD

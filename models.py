@@ -80,6 +80,42 @@ class Encoder(nn.Module):
         return self.main(input)
 
 
+class VariationalEncoder(nn.Module):
+    def __init__(self, ngpu, cfg):
+        super(VariationalEncoder, self).__init__()
+        self.ngpu = ngpu
+        self.nc = cfg["nc"]
+        self.ndf = cfg["ndf"]
+        self.nz = cfg["nz"]
+        self.main = nn.Sequential(
+            # input is (nc) x 48 x 48
+            nn.Conv2d(self.nc, self.ndf, 4, 2, 1, bias=False),
+            nn.BatchNorm2d(self.ndf),
+            nn.LeakyReLU(0.2, inplace=True),
+            # state size. (ndf) x 24 x 24
+            nn.Conv2d(self.ndf, self.ndf * 2, 4, 2, 1, bias=False),
+            nn.BatchNorm2d(self.ndf * 2),
+            nn.LeakyReLU(0.2, inplace=True),
+            # state size. (ndf*2) x 12 x 12
+            nn.Conv2d(self.ndf * 2, self.ndf * 4, 4, 2, 1, bias=False),
+            nn.BatchNorm2d(self.ndf * 4),
+            nn.LeakyReLU(0.2, inplace=True),
+            # state size. (ndf*4) x 6 x 6
+            nn.Conv2d(self.ndf * 4, 2*self.nz, 3, 4, 0, bias=False),
+            nn.LeakyReLU(0.2, inplace=True)
+        )
+        print(self.main)
+        self.fc_mu = nn.Linear(2*self.nz, self.nz)
+        self.fc_logvar = nn.Linear(2*self.nz, self.nz)
+
+    def forward(self, x):
+        shared_latent = self.main(x)
+        shared_latent = shared_latent.view(-1, 2*self.nz)
+        mu = self.fc_mu(shared_latent)
+        logvar = self.fc_logvar(shared_latent)
+        return mu, logvar
+
+
 class Discriminator(nn.Module):
     def __init__(self, ngpu, cfg):
         super(Discriminator, self).__init__()
@@ -130,7 +166,6 @@ def initialise(model, path):
         model.load_state_dict(torch.load(path))
     else:
         model.apply(weights_init)
-
 
 
 manualSeed = 999
