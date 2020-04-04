@@ -51,7 +51,7 @@ if __name__ == "__main__":
 
     test_batch = next(iter(dataloader))
     test_imgs = test_batch[0].to(device)[:64]
-
+    iter = 0
     start = time()
     for epoch in range(cfg["num_epoch"]):
         print("Epoch:", epoch)
@@ -131,7 +131,7 @@ if __name__ == "__main__":
             optimizerE.step()
 
             # # Output training stats
-            if i % cfg["image_rate"] == 0 or ((epoch == cfg["num_epoch"] - 1) and (i == len(dataloader) - 1)):
+            if iter % cfg["image_rate"] == 0 or ((epoch == cfg["num_epoch"] - 1) and (i == len(dataloader) - 1)):
                 out_format = "Time: {:.1f} {:d}/{:d}\tLoss_D: {:.4f}\tLoss_G: {:.4f}\tLoss_E: {:.4f}"
                 print(
                     out_format.format(time() - start, i, len(dataloader), errD.item(), errG.item(), err_content.item()))
@@ -145,6 +145,7 @@ if __name__ == "__main__":
                 plot_real_vs_fake(test_imgs, fake_imgs, show=False,
                                   save_path="output_images/VAEGAN_out_{}_{}.png"
                                   .format(epoch, i))
+            iter += 1
 
     torch.save(netG.state_dict(), cfg["gen_path"])
     torch.save(netD.state_dict(), cfg["dis_path"])
