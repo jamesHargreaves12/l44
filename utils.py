@@ -38,7 +38,7 @@ def get_dataset():
     return dataloader
 
 
-def plot_real_vs_fake(real_imgs, fake_imgs):
+def plot_real_vs_fake(real_imgs, fake_imgs, show=True, save_path=None):
     # Plot the real images
     plt.figure(figsize=(15, 15))
     plt.subplot(1, 2, 1)
@@ -49,6 +49,14 @@ def plot_real_vs_fake(real_imgs, fake_imgs):
 
     # Plot the fake images from the last epoch
     plt.subplot(1, 2, 2)
+    plt.axis("off")
+    plt.title("Fake Images")
+    plt.imshow(np.transpose(fake_imgs, (1, 2, 0)))
+    if save_path:
+        plt.savefig(save_path)
+    if show:
+        plt.show()
+
 
 
 def save_images(imgs, filepath):

@@ -26,7 +26,8 @@ import yaml
 from IPython.display import HTML
 
 from models import Encoder, Generator, Discriminator, initialise, VariationalEncoder
-from utils import get_dataset, get_model_and_optimizer, save_images, reparameterize, loss_function_kld
+from utils import get_dataset, get_model_and_optimizer, save_images, reparameterize, loss_function_kld, \
+    plot_real_vs_fake
 
 if __name__ == "__main__":
 
@@ -48,7 +49,8 @@ if __name__ == "__main__":
     calc_BCE_loss = nn.BCELoss()
     calc_MSE_loss = nn.MSELoss()
 
-    img_list = []
+    test_batch = next(iter(dataloader))
+    test_imgs = test_batch[0].to(device)[:64]
 
     start = time()
     for epoch in range(cfg["num_epoch"]):
@@ -70,7 +72,7 @@ if __name__ == "__main__":
             errD_real.backward()
 
             # Fake
-            X_tilde = netG(Z_mu.reshape(-1,cfg['nz'],1,1))
+            X_tilde = netG(Z_mu.reshape(-1, cfg['nz'], 1, 1))
             label.fill_(cfg["fake_label"])
             _, Dis_X_tilde = netD(X_tilde)
             Dis_X_tilde = Dis_X_tilde.view(-1)
@@ -136,9 +138,13 @@ if __name__ == "__main__":
                 start = time()
 
                 with torch.no_grad():
-                    fake = netG(fixed_noise).detach().cpu()
-                fake_imgs = vutils.make_grid(fake, padding=2, normalize=True)
-                save_images(fake_imgs, "output_images/VAEGAN_out_{}_{}.png".format(epoch, i))
+                    Z_mu, _ = netE(test_imgs)
+                    fake = netG(Z_mu.reshape(-1, cfg['nz'], 1, 1))
+
+                fake_imgs = vutils.make_grid(fake, padding=2, normalize=True)[:64]
+                plot_real_vs_fake(test_imgs, fake_imgs, show=False,
+                                  save_path="output_images/VAEGAN_out_{}_{}.png"
+                                  .format(epoch, i))
 
     torch.save(netG.state_dict(), cfg["gen_path"])
     torch.save(netD.state_dict(), cfg["dis_path"])

@@ -29,7 +29,6 @@ from models import Generator, Discriminator, weights_init, initialise
 from utils import get_dataset, get_model_and_optimizer, plot_real_vs_fake, save_images
 
 if __name__ == "__main__":
-
     # Root directory for dataset
     cfg = yaml.load(open("config.yaml"))
 
