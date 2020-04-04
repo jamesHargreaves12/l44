@@ -138,7 +138,7 @@ if __name__ == "__main__":
                 with torch.no_grad():
                     fake = netG(fixed_noise).detach().cpu()
                 fake_imgs = vutils.make_grid(fake, padding=2, normalize=True)
-                save_images(fake_imgs, "output_images/GAN_out_{}_{}.png".format(epoch, i))
+                save_images(fake_imgs, "output_images/VAEGAN_out_{}_{}.png".format(epoch, i))
 
     torch.save(netG.state_dict(), cfg["gen_path"])
     torch.save(netD.state_dict(), cfg["dis_path"])
