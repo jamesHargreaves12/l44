@@ -7,3 +7,4 @@ r250/*
 .idea/*
 __pycache__/*
 .ipynb_checkpoints/*
+config.yaml
