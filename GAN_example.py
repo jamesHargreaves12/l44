@@ -107,4 +107,5 @@ if __name__ == "__main__":
 
     real_batch = next(iter(dataloader))
     real_imgs = real_batch[0].to(device)[:64]
-    plot_real_vs_fake(real_imgs, img_list[-1])
+    if not torch.cuda.is_available():
+        plot_real_vs_fake(real_imgs, img_list[-1])
