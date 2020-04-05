@@ -40,8 +40,7 @@ if __name__ == "__main__":
     device = torch.device("cuda:0" if torch.cuda.is_available() > 0 else "cpu")
 
     dataloader = get_dataset(1, False)
-    df = pd.read_csv('data/FER_orig/train.csv')
-    labs = df["emotion"]
+    labs = open('data/FERlabs.txt', 'r').read().split(',')
 
     netG, optimizerG = get_model_and_optimizer(Generator, cfg["gen_path"], cfg)
     netE, optimizerE = get_model_and_optimizer(VariationalEncoder, cfg["enc_path"], cfg)
@@ -57,8 +56,8 @@ if __name__ == "__main__":
         for i, (data, lab) in enumerate(zip(dataloader, labs), 0):
             X = data[0].to(device)
             Z_mu, Z_logvar = netE(X)
-            emotion_latents[lab].append((Z_mu.view(-1).numpy(), Z_logvar.view(-1).numpy()))
-    aeecc6505e5133218f8c7bb4dd00fc947eaeed5a
+            emotion_latents[lab].append((Z_mu.view(-1).cpu().numpy(), Z_logvar.view(-1).cpu().numpy()))
+
     average_emotion = {}
     for emotion in emotion_latents.keys():
         df_mu = pd.DataFrame([x[0] for x in emotion_latents[emotion]])
@@ -67,12 +66,36 @@ if __name__ == "__main__":
         df_logvar_average = df_logvar.mean().to_numpy()
         average_emotion[emotion] = (df_mu_average, df_logvar_average)
 
+    # Trying to find the average person with each emotion - poor results:
+    # with torch.no_grad():
+    #     for emotion in average_emotion.keys():
+    #         input_mu = torch.from_numpy(average_emotion[emotion][0])
+    #         input_logvar = torch.from_numpy(average_emotion[emotion][1])
+    #         reshape = input_mu.reshape([1, cfg['nz'], 1, 1]).float()
+    #         fake = netG(reshape)
+    #         img = vutils.make_grid(fake, padding=5, normalize=True).cpu()
+    #         plt.imshow(img[0], cmap=cm.gray)
+    #         plt.savefig("output_images/emotion_{}.png".format(emotion))
+
+
+    test_person = next(iter(dataloader))
+    test_label = labs[0]
+    results = {}
     with torch.no_grad():
+        X = test_person[0].to(device)
+        Z_mu, Z_logvar = netE(X)
+        Z_mu = Z_mu.view(-1).cpu().numpy()
         for emotion in average_emotion.keys():
-            input_mu = torch.from_numpy(average_emotion[emotion][0])
-            input_logvar = torch.from_numpy(average_emotion[emotion][1])
-            reshape = input_mu.reshape([1, cfg['nz'], 1, 1]).float()
-            fake = netG(reshape)
-            img = vutils.make_grid(fake, padding=5, normalize=True).cpu()
-            plt.imshow(img[0], cmap=cm.gray)
-            plt.savefig("output_images/emotion_{}.png".format(emotion))
+            if emotion == test_label:
+                results[emotion] = X
+            else:
+                Z_mu_changed = Z_mu - average_emotion[test_label][0] + average_emotion[emotion][0]
+                fake = netG(torch.from_numpy(Z_mu_changed).reshape(-1, cfg['nz'], 1, 1).float())
+                results[emotion] = fake
+        x = 1
+    f, axarr = plt.subplots(1, 7)
+    for em in results.keys():
+        print(int(em))
+        img = vutils.make_grid(results[em], padding=5, normalize=True).cpu()[0]
+        axarr[int(em)].imshow(img)
+    plt.savefig("output_images/emotion_change.png")
