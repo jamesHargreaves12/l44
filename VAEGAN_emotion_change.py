@@ -54,6 +54,8 @@ if __name__ == "__main__":
 
     with torch.no_grad():
         for i, (data, lab) in enumerate(zip(dataloader, labs), 0):
+            if not torch.cuda.is_available() and i > 300:
+                break
             X = data[0].to(device)
             Z_mu, Z_logvar = netE(X)
             emotion_latents[lab].append((Z_mu.view(-1).cpu().numpy(), Z_logvar.view(-1).cpu().numpy()))
@@ -77,25 +79,32 @@ if __name__ == "__main__":
     #         plt.imshow(img[0], cmap=cm.gray)
     #         plt.savefig("output_images/emotion_{}.png".format(emotion))
 
-
-    test_person = next(iter(dataloader))
-    test_label = labs[0]
-    results = {}
+    data_iter = iter(get_dataset(1, False))
+    num_attempts = 8
+    results = []
     with torch.no_grad():
-        X = test_person[0].to(device)
-        Z_mu, Z_logvar = netE(X)
-        Z_mu = Z_mu.view(-1).cpu().numpy()
-        for emotion in average_emotion.keys():
-            if emotion == test_label:
-                results[emotion] = X
-            else:
-                Z_mu_changed = Z_mu - average_emotion[test_label][0] + average_emotion[emotion][0]
-                fake = netG(torch.from_numpy(Z_mu_changed).reshape(-1, cfg['nz'], 1, 1).float())
-                results[emotion] = fake
-        x = 1
-    f, axarr = plt.subplots(1, 7)
-    for em in results.keys():
-        print(int(em))
-        img = vutils.make_grid(results[em], padding=5, normalize=True).cpu()[0]
-        axarr[int(em)].imshow(img, cmap=cm.gray)
-    plt.savefig("output_images/emotion_change.png")
+        for attempt in range(num_attempts):
+            test_person = next(data_iter)
+            test_label = labs[num_attempts]
+            X = test_person[0].to(device)
+            result = {}
+            result["7"] = X
+            Z_mu, Z_logvar = netE(X)
+            Z_mu = Z_mu.view(-1).cpu().numpy()
+            for emotion in average_emotion.keys():
+                if emotion == test_label:
+                    result[emotion] = X
+                    fake = netG(torch.from_numpy(Z_mu).reshape(-1, cfg['nz'], 1, 1).float().to(device))
+                    result[emotion] = fake
+                else:
+                    Z_mu_changed = Z_mu - average_emotion[test_label][0] + average_emotion[emotion][0]
+                    fake = netG(torch.from_numpy(Z_mu_changed).reshape(-1, cfg['nz'], 1, 1).float().to(device))
+                    result[emotion] = fake
+            results.append(result)
+
+    f, axarr = plt.subplots(num_attempts, 8)
+    for i, result in enumerate(results):
+        for em in result.keys():
+            img = vutils.make_grid(result[em], padding=5, normalize=True).cpu()[0]
+            axarr[i, int(em)].imshow(img, cmap=cm.gray)
+        plt.savefig("output_images/emotion_change.png")
