@@ -89,15 +89,15 @@ if __name__ == "__main__":
             X = test_person[0].to(device)
             result = {}
             result["7"] = X
-            Z_mu, Z_logvar = netE(X)
-            Z_mu = Z_mu.view(-1).cpu().numpy()
+            Z_mu, _ = netE(X)
+            Z_mu_np = Z_mu.view(-1).cpu().numpy()
             for emotion in average_emotion.keys():
                 if emotion == test_label:
                     result[emotion] = X
-                    fake = netG(torch.from_numpy(Z_mu).reshape(-1, cfg['nz'], 1, 1).float().to(device))
+                    fake = netG(Z_mu.reshape(-1, cfg['nz'], 1, 1))
                     result[emotion] = fake
                 else:
-                    Z_mu_changed = Z_mu - average_emotion[test_label][0] + average_emotion[emotion][0]
+                    Z_mu_changed = Z_mu_np - average_emotion[test_label][0] + average_emotion[emotion][0]
                     fake = netG(torch.from_numpy(Z_mu_changed).reshape(-1, cfg['nz'], 1, 1).float().to(device))
                     result[emotion] = fake
             results.append(result)
@@ -105,6 +105,6 @@ if __name__ == "__main__":
     f, axarr = plt.subplots(num_attempts, 8)
     for i, result in enumerate(results):
         for em in result.keys():
-            img = vutils.make_grid(result[em], padding=5, normalize=True).cpu()[0]
-            axarr[i, int(em)].imshow(img, cmap=cm.gray)
+            img = vutils.make_grid(result[em], padding=2, normalize=True).cpu()
+            axarr[i, int(em)].imshow(np.transpose(img, (1, 2, 0)))
         plt.savefig("output_images/emotion_change.png")
