@@ -55,12 +55,10 @@ if __name__ == "__main__":
 
     with torch.no_grad():
         for i, (data, lab) in enumerate(zip(dataloader, labs), 0):
-            if i > 100:
-                break
             X = data[0].to(device)
             Z_mu, Z_logvar = netE(X)
             emotion_latents[lab].append((Z_mu.view(-1).numpy(), Z_logvar.view(-1).numpy()))
-
+    aeecc6505e5133218f8c7bb4dd00fc947eaeed5a
     average_emotion = {}
     for emotion in emotion_latents.keys():
         df_mu = pd.DataFrame([x[0] for x in emotion_latents[emotion]])
