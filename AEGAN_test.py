@@ -32,7 +32,6 @@ from utils import get_dataset, get_model_and_optimizer, save_images, reparameter
 if __name__ == "__main__":
 
     # Root directory for dataset
-    lambda_val = 0.1
     cfg = yaml.load(open("config_aegan.yaml"))
 
     device = torch.device("cuda:0" if torch.cuda.is_available() > 0 else "cpu")
@@ -113,7 +112,7 @@ if __name__ == "__main__":
             errG_style_1 = calc_BCE_loss(Dis_X_tilde.view(-1), label)
             errG_style_2 = calc_BCE_loss(Dis_Xp.view(-1), label)
 
-            errG = errG_style_1 + errG_style_2 + lambda_val * err_content
+            errG = errG_style_1 + errG_style_2 + cfg["lambda_val"] * err_content
             errG.backward()
             optimizerG.step()
             #

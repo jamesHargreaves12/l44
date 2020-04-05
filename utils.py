@@ -22,7 +22,7 @@ from IPython.display import HTML
 from models import Generator, Discriminator, weights_init, initialise
 
 
-def get_dataset():
+def get_dataset(batch_size=128, shuffle=True):
     dataroot = "data/FER"
     image_size = 48
     dataset = dset.ImageFolder(root=dataroot,
@@ -33,8 +33,8 @@ def get_dataset():
                                    transforms.ToTensor(),
                                    transforms.Normalize((0.5,), (0.5,))]))
 
-    dataloader = torch.utils.data.DataLoader(dataset, batch_size=128,
-                                             shuffle=True, num_workers=2)
+    dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size,
+                                             shuffle=shuffle, num_workers=2)
     return dataloader
 
 
