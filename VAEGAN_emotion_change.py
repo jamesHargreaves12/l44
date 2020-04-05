@@ -97,5 +97,5 @@ if __name__ == "__main__":
     for em in results.keys():
         print(int(em))
         img = vutils.make_grid(results[em], padding=5, normalize=True).cpu()[0]
-        axarr[int(em)].imshow(img)
+        axarr[int(em)].imshow(img, cmap=cm.gray)
     plt.savefig("output_images/emotion_change.png")
