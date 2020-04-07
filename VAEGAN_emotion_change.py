@@ -27,6 +27,7 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import yaml
 from IPython.display import HTML
+from tqdm import tqdm
 
 from models import Encoder, Generator, Discriminator, initialise, VariationalEncoder
 from utils import get_dataset, get_model_and_optimizer, save_images, reparameterize, loss_function_kld, \
@@ -39,34 +40,32 @@ if __name__ == "__main__":
 
     device = torch.device("cuda:0" if torch.cuda.is_available() > 0 else "cpu")
 
-    dataloader = get_dataset(1, False)
+    dataloader = get_dataset(shuffle=False)
     labs = open('data/FERlabs.txt', 'r').read().split(',')
 
     netG, optimizerG = get_model_and_optimizer(Generator, cfg["gen_path"], cfg)
     netE, optimizerE = get_model_and_optimizer(VariationalEncoder, cfg["enc_path"], cfg)
 
-    criterion = nn.BCELoss()
-
-    calc_BCE_loss = nn.BCELoss()
-    calc_MSE_loss = nn.MSELoss()
-
     emotion_latents = defaultdict(list)
-
+    lab_iter = iter(labs)
+    output_file = open("data/latent_to_emotion.csv", "w+")
     with torch.no_grad():
-        for i, (data, lab) in enumerate(zip(dataloader, labs), 0):
-            if not torch.cuda.is_available() and i > 300:
-                break
+        for i, data in tqdm(enumerate(dataloader, 0)):
             X = data[0].to(device)
-            Z_mu, Z_logvar = netE(X)
-            emotion_latents[lab].append((Z_mu.view(-1).cpu().numpy(), Z_logvar.view(-1).cpu().numpy()))
+            Z_mu, _ = netE(X)
+            for z in Z_mu.cpu().numpy():
+                lab = next(lab_iter)
+                emotion_latents[lab].append(z)
+                output_file.write(",".join([str(x) for x in z]) + "," + lab + "\n")
+    output_file.close()
+
+
 
     average_emotion = {}
     for emotion in emotion_latents.keys():
-        df_mu = pd.DataFrame([x[0] for x in emotion_latents[emotion]])
-        df_logvar = pd.DataFrame([x[1] for x in emotion_latents[emotion]])
+        df_mu = pd.DataFrame([x for x in emotion_latents[emotion]])
         df_mu_average = df_mu.mean().to_numpy()
-        df_logvar_average = df_logvar.mean().to_numpy()
-        average_emotion[emotion] = (df_mu_average, df_logvar_average)
+        average_emotion[emotion] = df_mu_average
 
     # Trying to find the average person with each emotion - poor results:
     # with torch.no_grad():
@@ -79,29 +78,35 @@ if __name__ == "__main__":
     #         plt.imshow(img[0], cmap=cm.gray)
     #         plt.savefig("output_images/emotion_{}.png".format(emotion))
 
-    data_iter = iter(get_dataset(1, False))
+    # I think the issue is that this network contains batch normalisation layer
     num_attempts = 8
     results = []
+    print("Generating changed emotions")
+    test_batch = next(iter(dataloader))
+    X = test_batch[0].to(device)
     with torch.no_grad():
-        for attempt in range(num_attempts):
-            test_person = next(data_iter)
-            test_label = labs[num_attempts]
-            X = test_person[0].to(device)
-            result = {}
-            result["7"] = X
-            Z_mu, _ = netE(X)
-            Z_mu_np = Z_mu.view(-1).cpu().numpy()
+        Z_mus, _ = netE(X)
+        fakes_no_change = netG(Z_mus.reshape(-1, cfg['nz'], 1, 1))
+        fake_imgs = vutils.make_grid(fakes_no_change, padding=2, normalize=True)[:64]
+        plot_real_vs_fake(X, fake_imgs, show=True)
+
+        for attempt in tqdm(range(num_attempts)):
+            test_label = labs[attempt]
+            result = {"7": X[attempt]}
+            Z_mu_np = Z_mus.cpu().numpy()
             for emotion in average_emotion.keys():
                 if emotion == test_label:
-                    result[emotion] = X
-                    fake = netG(Z_mu.reshape(-1, cfg['nz'], 1, 1))
+                    # fake = fakes_no_change[attempt]
+                    fake = netG(Z_mus.reshape(-1, cfg['nz'], 1, 1))[attempt]
                     result[emotion] = fake
                 else:
-                    Z_mu_changed = Z_mu_np - average_emotion[test_label][0] + average_emotion[emotion][0]
-                    fake = netG(torch.from_numpy(Z_mu_changed).reshape(-1, cfg['nz'], 1, 1).float().to(device))
+                    Z_mu_changed = Z_mu_np.copy()
+                    Z_mu_changed[attempt] = Z_mu_np[attempt] - average_emotion[test_label] + average_emotion[emotion]
+
+                    fake = netG(torch.from_numpy(Z_mu_changed).reshape(-1, cfg['nz'], 1, 1).float().to(device))[attempt]
                     result[emotion] = fake
             results.append(result)
-
+    #
     f, axarr = plt.subplots(num_attempts, 8)
     for i, result in enumerate(results):
         for em in result.keys():

@@ -32,12 +32,10 @@ from utils import get_dataset, get_model_and_optimizer, save_images, reparameter
 if __name__ == "__main__":
 
     # Root directory for dataset
-    cfg = yaml.load(open("config_aegan.yaml"))
-
-    device = torch.device("cuda:0" if torch.cuda.is_available() > 0 else "cpu")
-    fixed_noise = torch.randn(64, cfg['nz'], 1, 1, device=device)
-    print("FIXED NOISE", fixed_noise.shape)
     dataloader = get_dataset()
+    cfg = yaml.load(open("config_aegan.yaml"))
+    device = torch.device("cuda:0" if torch.cuda.is_available() > 0 else "cpu")
+
 
     netG, optimizerG = get_model_and_optimizer(Generator, cfg["gen_path"], cfg)
     netD, optimizerD = get_model_and_optimizer(Discriminator, cfg["dis_path"], cfg)

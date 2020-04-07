@@ -38,6 +38,19 @@ def get_dataset(batch_size=128, shuffle=True):
     return dataloader
 
 
+def get_dataset_celeba(batch_size=128, shuffle=True):
+    dataroot = "data/celeba"
+    dataset = dset.ImageFolder(root=dataroot,
+                               transform=transforms.Compose([
+                                   transforms.Resize((64, 64)),
+                                   transforms.ToTensor(),
+                                   transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))]))
+
+    dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size,
+                                             shuffle=shuffle, num_workers=2)
+    return dataloader
+
+
 def plot_real_vs_fake(real_imgs, fake_imgs, show=True, save_path=None):
     # Plot the real images
     plt.figure(figsize=(15, 15))
@@ -56,7 +69,6 @@ def plot_real_vs_fake(real_imgs, fake_imgs, show=True, save_path=None):
         plt.savefig(save_path)
     if show:
         plt.show()
-
 
 
 def save_images(imgs, filepath):

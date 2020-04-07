@@ -17,6 +17,24 @@ import matplotlib.animation as animation
 from IPython.display import HTML
 
 
+class LatentEmotionPredict(nn.Module):
+    def __init__(self, cfg):
+        super(LatentEmotionPredict, self).__init__()
+        self.main = nn.Sequential(
+            nn.Linear(cfg["nz"], 128),
+            nn.ReLU(True),
+
+            nn.Linear(128, 64),
+            nn.ReLU(True),
+
+            nn.Linear(64, cfg["num_labs"]),
+            nn.Softmax()
+        )
+
+    def forward(self, input):
+        return self.main(input)
+
+
 class Generator(nn.Module):
     def __init__(self, ngpu, cfg):
         super(Generator, self).__init__()
@@ -24,9 +42,10 @@ class Generator(nn.Module):
         nz = cfg["nz"]
         ngf = cfg["ngf"]
         nc = cfg["nc"]
+        kernel_size_dyn = cfg['image_size'] // 16
         self.main = nn.Sequential(
             # input is Z, going into a convolution
-            nn.ConvTranspose2d(nz, ngf * 8, 3, 1, 0, bias=False),
+            nn.ConvTranspose2d(nz, ngf * 8, kernel_size_dyn, 1, 0, bias=False),
             nn.BatchNorm2d(ngf * 8),
             nn.ReLU(True),
             # state size. (ngf*8) x 3 x 3
@@ -87,6 +106,7 @@ class VariationalEncoder(nn.Module):
         self.nc = cfg["nc"]
         self.ndf = cfg["ndf"]
         self.nz = cfg["nz"]
+        kernel_size_dyn = cfg['image_size'] // 16
         self.main = nn.Sequential(
             # input is (nc) x 48 x 48
             nn.Conv2d(self.nc, self.ndf, 4, 2, 1, bias=False),
@@ -101,16 +121,20 @@ class VariationalEncoder(nn.Module):
             nn.BatchNorm2d(self.ndf * 4),
             nn.LeakyReLU(0.2, inplace=True),
             # state size. (ndf*4) x 6 x 6
-            nn.Conv2d(self.ndf * 4, 2*self.nz, 3, 4, 0, bias=False),
+            nn.Conv2d(self.ndf * 4, self.ndf * 8, 4, 2, 1, bias=False),
+            nn.BatchNorm2d(self.ndf * 8),
+            nn.LeakyReLU(0.2, inplace=True),
+            # state size. (ndf*8) x 3 x 3
+            nn.Conv2d(self.ndf * 8, 2 * self.nz, kernel_size_dyn, 2, 0, bias=False),
             nn.LeakyReLU(0.2, inplace=True)
         )
         print(self.main)
-        self.fc_mu = nn.Linear(2*self.nz, self.nz)
-        self.fc_logvar = nn.Linear(2*self.nz, self.nz)
+        self.fc_mu = nn.Linear(2 * self.nz, self.nz)
+        self.fc_logvar = nn.Linear(2 * self.nz, self.nz)
 
     def forward(self, x):
         shared_latent = self.main(x)
-        shared_latent = shared_latent.view(-1, 2*self.nz)
+        shared_latent = shared_latent.view(-1, 2 * self.nz)
         mu = self.fc_mu(shared_latent)
         logvar = self.fc_logvar(shared_latent)
         return mu, logvar
@@ -122,6 +146,8 @@ class Discriminator(nn.Module):
         self.ngpu = ngpu
         nc = cfg["nc"]
         ndf = cfg["ndf"]
+        kernel_size_dyn = cfg['image_size'] // 16
+
         self.main_to_l = nn.Sequential(
             # input is (nc) x 48 x 48
             nn.Conv2d(nc, ndf, 4, 2, 1, bias=False),
@@ -135,14 +161,13 @@ class Discriminator(nn.Module):
             nn.BatchNorm2d(ndf * 4),
             nn.LeakyReLU(0.2, inplace=True),
         )
-
         self.main_after_l = nn.Sequential(
             # state size. (ndf*4) x 6 x 6
             nn.Conv2d(ndf * 4, ndf * 8, 4, 2, 1, bias=False),
             nn.BatchNorm2d(ndf * 8),
             nn.LeakyReLU(0.2, inplace=True),
             # state size. (ndf*8) x 3 x 3
-            nn.Conv2d(ndf * 8, 1, 3, 1, 0, bias=False),
+            nn.Conv2d(ndf * 8, 1, kernel_size_dyn, 1, 0, bias=False),
             nn.Sigmoid()
         )
 
@@ -163,7 +188,10 @@ def weights_init(m):
 
 def initialise(model, path):
     if os.path.exists(path):
-        model.load_state_dict(torch.load(path))
+        if torch.cuda.is_available():
+            model.load_state_dict(torch.load(path))
+        else:
+            model.load_state_dict(torch.load(path, map_location=torch.device('cpu')))
     else:
         model.apply(weights_init)
 
