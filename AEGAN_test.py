@@ -32,8 +32,8 @@ from utils import get_dataset, get_model_and_optimizer, save_images, reparameter
 if __name__ == "__main__":
 
     # Root directory for dataset
-    dataloader = get_dataset()
     cfg = yaml.load(open("config_aegan.yaml"))
+    dataloader = get_dataset(batch_size=cfg["batch_size"])
     device = torch.device("cuda:0" if torch.cuda.is_available() > 0 else "cpu")
 
 

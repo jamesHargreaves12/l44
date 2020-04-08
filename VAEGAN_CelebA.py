@@ -127,7 +127,7 @@ for epoch in range(cfg["num_epoch"]):
 
             fake_imgs = vutils.make_grid(fake, padding=2, normalize=True)[:64]
             plot_real_vs_fake(test_imgs, fake_imgs, show=False,
-                              save_path="output_images/VAEGAN_out_{}_{}.png"
+                              save_path="output_images/VAEGAN_out_celeba_{}_{}.png"
                               .format(epoch, i))
         iter += 1
 

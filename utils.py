@@ -22,10 +22,22 @@ from IPython.display import HTML
 from models import Generator, Discriminator, weights_init, initialise
 
 
+class ImageFolderWithPaths(dset.ImageFolder):
+    def __getitem__(self, index):
+        # this is what ImageFolder normally returns
+        original_tuple = super(ImageFolderWithPaths, self).__getitem__(index)
+        # the image file path
+        path = self.imgs[index][0]
+        name = path.split("/")[-1]
+        # make a new tuple that includes original and the path
+        tuple_with_path = (original_tuple + (name,))
+        return tuple_with_path
+
+
 def get_dataset(batch_size=128, shuffle=True):
     dataroot = "data/FER"
     image_size = 48
-    dataset = dset.ImageFolder(root=dataroot,
+    dataset = ImageFolderWithPaths(root=dataroot,
                                transform=transforms.Compose([
                                    transforms.Grayscale(num_output_channels=1),
                                    transforms.Resize(image_size),
@@ -40,11 +52,11 @@ def get_dataset(batch_size=128, shuffle=True):
 
 def get_dataset_celeba(batch_size=128, shuffle=True):
     dataroot = "data/celeba"
-    dataset = dset.ImageFolder(root=dataroot,
-                               transform=transforms.Compose([
-                                   transforms.Resize((64, 64)),
-                                   transforms.ToTensor(),
-                                   transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))]))
+    dataset = ImageFolderWithPaths(root=dataroot,
+                                   transform=transforms.Compose([
+                                       transforms.Resize((64, 64)),
+                                       transforms.ToTensor(),
+                                       transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))]))
 
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size,
                                              shuffle=shuffle, num_workers=2)
