@@ -143,7 +143,7 @@ if __name__ == "__main__":
                                   save_path="output_images/VAEGAN_out_{}_{}.png"
                                   .format(epoch, i))
             iter += 1
-
-    torch.save(netG.state_dict(), cfg["gen_path"])
-    torch.save(netD.state_dict(), cfg["dis_path"])
-    torch.save(netE.state_dict(), cfg["enc_path"])
+            if i == len(dataloader) - 1:
+                torch.save(netG.state_dict(), cfg["gen_path"])
+                torch.save(netD.state_dict(), cfg["dis_path"])
+                torch.save(netE.state_dict(), cfg["enc_path"])
