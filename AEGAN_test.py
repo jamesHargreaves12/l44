@@ -144,6 +144,7 @@ if __name__ == "__main__":
                                   .format(epoch, i))
             iter += 1
             if i == len(dataloader) - 1:
+                print("Saving")
                 torch.save(netG.state_dict(), cfg["gen_path"])
                 torch.save(netD.state_dict(), cfg["dis_path"])
                 torch.save(netE.state_dict(), cfg["enc_path"])
