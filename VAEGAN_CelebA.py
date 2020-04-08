@@ -131,6 +131,7 @@ for epoch in range(cfg["num_epoch"]):
                               .format(epoch, i))
         iter += 1
 
-torch.save(netG.state_dict(), cfg["gen_path"])
-torch.save(netD.state_dict(), cfg["dis_path"])
-torch.save(netE.state_dict(), cfg["enc_path"])
+        if i == len(dataloader) - 1:
+            torch.save(netG.state_dict(), cfg["gen_path"])
+            torch.save(netD.state_dict(), cfg["dis_path"])
+            torch.save(netE.state_dict(), cfg["enc_path"])
