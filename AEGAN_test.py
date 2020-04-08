@@ -36,7 +36,6 @@ if __name__ == "__main__":
     dataloader = get_dataset(batch_size=cfg["batch_size"])
     device = torch.device("cuda:0" if torch.cuda.is_available() > 0 else "cpu")
 
-
     netG, optimizerG = get_model_and_optimizer(Generator, cfg["gen_path"], cfg)
     netD, optimizerD = get_model_and_optimizer(Discriminator, cfg["dis_path"], cfg)
     netE, optimizerE = get_model_and_optimizer(VariationalEncoder, cfg["enc_path"], cfg)

@@ -34,18 +34,27 @@ class ImageFolderWithPaths(dset.ImageFolder):
         return tuple_with_path
 
 
-def get_dataset(batch_size=128, shuffle=True):
+def get_dataset(batch_size=128, shuffle=True, with_augmentation=True):
     dataroot = "data/FER"
     image_size = 48
-    dataset = ImageFolderWithPaths(root=dataroot,
-                                   transform=transforms.Compose([
-                                       transforms.Grayscale(num_output_channels=1),
-                                       transforms.RandomHorizontalFlip(),
-                                       transforms.RandomRotation(10, expand=True, fill=(0,)),
-                                       transforms.RandomCrop(image_size, padding=4),
-                                       transforms.Resize(image_size),
-                                       transforms.ToTensor(),
-                                       transforms.Normalize((0.5,), (0.5,))]))
+    if with_augmentation:
+        dataset = ImageFolderWithPaths(root=dataroot,
+                                       transform=transforms.Compose([
+                                           transforms.Grayscale(num_output_channels=1),
+                                           transforms.RandomHorizontalFlip(),
+                                           transforms.RandomRotation(10, expand=True, fill=(0,)),
+                                           transforms.RandomCrop(image_size, padding=4),
+                                           transforms.Resize(image_size),
+                                           transforms.ToTensor(),
+                                           transforms.Normalize((0.5,), (0.5,))]))
+    else:
+        dataset = ImageFolderWithPaths(root=dataroot,
+                                       transform=transforms.Compose([
+                                           transforms.Grayscale(num_output_channels=1),
+                                           transforms.Resize(image_size),
+                                           transforms.ToTensor(),
+                                           transforms.Normalize((0.5,), (0.5,))]))
+
 
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size,
                                              shuffle=shuffle, num_workers=2)

@@ -40,7 +40,7 @@ if __name__ == "__main__":
 
     device = torch.device("cuda:0" if torch.cuda.is_available() > 0 else "cpu")
 
-    dataloader = get_dataset(shuffle=False)
+    dataloader = get_dataset(shuffle=False, with_augmentation=False)
     labs = open('data/FERlabs.txt', 'r').read().split(',')
 
     netG, optimizerG = get_model_and_optimizer(Generator, cfg["gen_path"], cfg)
@@ -48,7 +48,7 @@ if __name__ == "__main__":
 
     emotion_latents = defaultdict(list)
     lab_iter = iter(labs)
-    output_file = open("data/latent_to_emotion.csv", "w+")
+    # output_file = open("data/latent_to_emotion.csv", "w+")
     with torch.no_grad():
         for i, data in tqdm(enumerate(dataloader, 0)):
             X = data[0].to(device)
@@ -56,8 +56,8 @@ if __name__ == "__main__":
             for z in Z_mu.cpu().numpy():
                 lab = next(lab_iter)
                 emotion_latents[lab].append(z)
-                output_file.write(",".join([str(x) for x in z]) + "," + lab + "\n")
-    output_file.close()
+                # output_file.write(",".join([str(x) for x in z]) + "," + lab + "\n")
+    # output_file.close()
 
 
 
@@ -112,4 +112,4 @@ if __name__ == "__main__":
         for em in result.keys():
             img = vutils.make_grid(result[em], padding=2, normalize=True).cpu()
             axarr[i, int(em)].imshow(np.transpose(img, (1, 2, 0)))
-        plt.savefig("output_images/emotion_change.png")
+        plt.savefig("output_images/emotion_change_vaegan_fer.png")
