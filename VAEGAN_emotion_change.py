@@ -59,8 +59,6 @@ if __name__ == "__main__":
                 # output_file.write(",".join([str(x) for x in z]) + "," + lab + "\n")
     # output_file.close()
 
-
-
     average_emotion = {}
     for emotion in emotion_latents.keys():
         df_mu = pd.DataFrame([x for x in emotion_latents[emotion]])

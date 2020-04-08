@@ -34,34 +34,31 @@ class ImageFolderWithPaths(dset.ImageFolder):
         return tuple_with_path
 
 
-def get_dataset(batch_size=128, shuffle=True, with_augmentation=True):
-    dataroot = "data/FER"
-    image_size = 48
-    if with_augmentation:
-        dataset = ImageFolderWithPaths(root=dataroot,
-                                       transform=transforms.Compose([
-                                           transforms.Grayscale(num_output_channels=1),
-                                           transforms.RandomHorizontalFlip(),
-                                           transforms.RandomRotation(10, expand=True, fill=(0,)),
-                                           transforms.RandomCrop(image_size, padding=4),
-                                           transforms.Resize(image_size),
-                                           transforms.ToTensor(),
-                                           transforms.Normalize((0.5,), (0.5,))]))
+def get_dataset(cfg, shuffle=True):
+    trans = []
+    if cfg['grayscale']:
+        trans.append(transforms.Grayscale(num_output_channels=1))
+    if cfg['with_augmentation']:
+        trans.extend([
+            transforms.RandomHorizontalFlip(),
+            transforms.RandomRotation(10, expand=True, fill=(0,)),
+            transforms.RandomCrop(cfg['image_size'], padding=4)])
+    trans.extend([transforms.Resize(cfg['image_size']),
+                  transforms.ToTensor()])
+    if cfg['grayscale']:
+        trans.append(transforms.Normalize((0.5,), (0.5,)))
     else:
-        dataset = ImageFolderWithPaths(root=dataroot,
-                                       transform=transforms.Compose([
-                                           transforms.Grayscale(num_output_channels=1),
-                                           transforms.Resize(image_size),
-                                           transforms.ToTensor(),
-                                           transforms.Normalize((0.5,), (0.5,))]))
+        trans.append(transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)))
 
+    dataset = ImageFolderWithPaths(root=cfg['dataroot'],
+                                       transform=transforms.Compose(trans))
 
-    dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size,
+    dataloader = torch.utils.data.DataLoader(dataset, batch_size=cfg['batch_size'],
                                              shuffle=shuffle, num_workers=2)
     return dataloader
 
 
-def get_dataset_celeba(batch_size=128, shuffle=True):
+def get_dataset_celeba(cfg, batch_size=128, shuffle=True):
     dataroot = "data/celeba"
     dataset = ImageFolderWithPaths(root=dataroot,
                                    transform=transforms.Compose([

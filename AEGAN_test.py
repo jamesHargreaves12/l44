@@ -30,10 +30,13 @@ from utils import get_dataset, get_model_and_optimizer, save_images, reparameter
     plot_real_vs_fake
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument('config_file', help='config file name')
+    args = parser.parse_args()
 
     # Root directory for dataset
-    cfg = yaml.load(open("config_aegan.yaml"))
-    dataloader = get_dataset(batch_size=cfg["batch_size"])
+    cfg = yaml.load(open(args.config_file))
+    dataloader = get_dataset(cfg)
     device = torch.device("cuda:0" if torch.cuda.is_available() > 0 else "cpu")
 
     netG, optimizerG = get_model_and_optimizer(Generator, cfg["gen_path"], cfg)
