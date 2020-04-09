@@ -43,7 +43,7 @@ def get_dataset(cfg, shuffle=True):
             transforms.RandomHorizontalFlip(),
             transforms.RandomRotation(10, expand=True, fill=(0,)),
             transforms.RandomCrop(cfg['image_size'], padding=4)])
-    trans.extend([transforms.Resize(cfg['image_size']),
+    trans.extend([transforms.Resize((cfg['image_size'],cfg['image_size'])),
                   transforms.ToTensor()])
     if cfg['grayscale']:
         trans.append(transforms.Normalize((0.5,), (0.5,)))

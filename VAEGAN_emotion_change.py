@@ -85,8 +85,8 @@ if __name__ == "__main__":
     with torch.no_grad():
         Z_mus, _ = netE(X)
         fakes_no_change = netG(Z_mus.reshape(-1, cfg['nz'], 1, 1))
-        fake_imgs = vutils.make_grid(fakes_no_change, padding=2, normalize=True)[:64]
-        plot_real_vs_fake(X, fake_imgs, show=True)
+        # fake_imgs = vutils.make_grid(fakes_no_change, padding=2, normalize=True)[:64]
+        # plot_real_vs_fake(X, fake_imgs, show=True)
 
         for attempt in tqdm(range(num_attempts)):
             test_label = labs[attempt]

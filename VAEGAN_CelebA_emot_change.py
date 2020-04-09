@@ -36,19 +36,42 @@ from utils import get_dataset, get_model_and_optimizer, save_images, reparameter
     plot_real_vs_fake, get_dataset_celeba
 
 
+
 def get_lab(labs, id):
-    return np.array(labs[labs["image_id"] == id]["Smiling"])[0]
+    return np.array(labs[labs["image_id"] == id]["lab"])[0]
+
+
+def get_lab_df(filepath):
+    if 'list_attr_celeba.csv' in filepath:
+        lab_df = pd.read_csv(filepath)
+        lab_df['lab'] = lab_df["Smiling"].map(lambda x: "Smiling" if x == 1 else "Not Smiling")
+    elif 'output_classif.csv' in filepath:
+        lab_df = pd.read_csv(filepath, header=None)
+        lab_df = lab_df.rename(
+            columns={0: "image_id", 1: "Angry", 2: "Disgust", 3: "Fear", 4: "Happy", 5: "Sad", 6: "Surprise",
+                     7: "Neutral"})
+        # Could add filter based on confidence of prediction here
+        expression_order= ["Angry", "Disgust", "Fear", "Happy", "Sad", "Surprise", "Neutral"]
+
+        lab_df['lab'] = lab_df[expression_order].idxmax(axis=1)
+    elif 'ExpW' in filepath:
+        lab_df = pd.read_csv(filepath, header=None)
+        expression_order = ['neutral', 'happiness', 'surprise', 'sadness', 'anger', 'disgust', 'fear', 'contempt', 'unknown']
+        lab_df = lab_df.rename(
+            columns={0: "image_id", 1: "size", 2: "usage", 3: 'neutral', 4: 'happiness', 5: 'surprise', 6: 'sadness',
+                     7: 'anger', 8: 'disgust', 9: 'fear', 10: 'contempt', 11: 'unknown'})
+        lab_df['lab'] = lab_df[expression_order].idxmax(axis=1)
+
+    return lab_df[["image_id", "lab"]]
 
 
 if __name__ == "__main__":
-
-    # Root directory for dataset
-    cfg = yaml.load(open("config_celeba.yaml"))
+    cfg = yaml.load(open("config_expw.yaml"))
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-    dataloader = get_dataset_celeba(shuffle=False)
-    labs = pd.read_csv('data/celeba/list_attr_celeba.csv')[["image_id", "Smiling"]]
+    dataloader = get_dataset(cfg, shuffle=False)
+    lab_df = get_lab_df(cfg['label_csv_path'])
 
     netG, optimizerG = get_model_and_optimizer(Generator, cfg["gen_path"], cfg)
     netE, optimizerE = get_model_and_optimizer(VariationalEncoder, cfg["enc_path"], cfg)
@@ -64,7 +87,7 @@ if __name__ == "__main__":
             filenames = data[2]
             Z_mu, _ = netE(X)
             for z, fname in zip(Z_mu.cpu().numpy(), filenames):
-                lab = get_lab(labs, fname)
+                lab = get_lab(lab_df, fname)
                 emotion_latents[lab].append(z)
                 # output_file.write(",".join([str(x) for x in z]) + "," + lab + "\n")
     # output_file.close()
@@ -99,8 +122,8 @@ if __name__ == "__main__":
 
         for attempt in tqdm(range(num_attempts)):
             fname = test_batch[2][attempt]
-            test_label = get_lab(labs, fname)
-            result = {0: X[attempt]}
+            test_label = get_lab(lab_df, fname)
+            result = {"Original": X[attempt]}
             Z_mu_np = Z_mus.cpu().numpy()
             for emotion in average_emotion.keys():
                 if emotion == test_label:
@@ -116,15 +139,15 @@ if __name__ == "__main__":
             results.append(result)
     #
     fig, axarr = plt.subplots(num_attempts, len(results[0].keys()), constrained_layout=False)
-    axarr[0, 0].title.set_text("Original")
-    axarr[0, 1].title.set_text("Smiling")
-    axarr[0, 2].title.set_text("Not Smiling")
+    keys = list(results[0].keys())
+    for i, k in enumerate(keys):
+        axarr[0, i].title.set_text(k)
     fig.subplots_adjust(hspace=0.05, wspace=0.05)
 
     for i, result in enumerate(results):
         for em in result.keys():
             img = vutils.make_grid(result[em], padding=2, normalize=True).cpu()
-            axarr[i, int(em)].imshow(np.transpose(img, (1, 2, 0)))
-            axarr[i, int(em)].set_xticklabels([])
-            axarr[i, int(em)].set_yticklabels([])
+            axarr[i, keys.index(em)].imshow(np.transpose(img, (1, 2, 0)))
+            axarr[i, keys.index(em)].set_xticklabels([])
+            axarr[i, keys.index(em)].set_yticklabels([])
         plt.savefig("output_images/emotion_change.png")
