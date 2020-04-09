@@ -58,17 +58,17 @@ def get_dataset(cfg, shuffle=True):
     return dataloader
 
 
-def get_dataset_celeba(cfg, batch_size=128, shuffle=True):
-    dataroot = "data/celeba"
-    dataset = ImageFolderWithPaths(root=dataroot,
-                                   transform=transforms.Compose([
-                                       transforms.Resize((64, 64)),
-                                       transforms.ToTensor(),
-                                       transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))]))
-
-    dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size,
-                                             shuffle=shuffle, num_workers=2)
-    return dataloader
+# def get_dataset_celeba(cfg, batch_size=128, shuffle=True):
+#     dataroot = "data/celeba"
+#     dataset = ImageFolderWithPaths(root=dataroot,
+#                                    transform=transforms.Compose([
+#                                        transforms.Resize((64, 64)),
+#                                        transforms.ToTensor(),
+#                                        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))]))
+#
+#     dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size,
+#                                              shuffle=shuffle, num_workers=2)
+#     return dataloader
 
 
 def plot_real_vs_fake(real_imgs, fake_imgs, show=True, save_path=None):
@@ -102,7 +102,11 @@ def get_model_and_optimizer(model_class, model_path, cfg):
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     ngpu = 1 if torch.cuda.is_available() else 0
     network = model_class(ngpu, cfg).to(device)
-    optimizer = optim.Adam(network.parameters(), lr=cfg["lr"], betas=(cfg["beta1"], 0.999))
+    if cfg["RMSprop"]:
+        optimizer = optim.RMSprop(network.parameters(), lr=cfg["lr"])
+    else:
+        optimizer = optim.Adam(network.parameters(), lr=cfg["lr"], betas=(cfg["beta1"], 0.999))
+
     initialise(network, model_path)
     print(network)
     return network, optimizer
