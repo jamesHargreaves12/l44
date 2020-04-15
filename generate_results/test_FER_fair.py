@@ -2,7 +2,7 @@ import torch
 import torchvision
 import matplotlib.pyplot as plt
 
-from FER_fair_ae import FairAE
+from old.FER_fair_ae import FairAE
 from dataprep.dataset_fer_plus import FERPlus
 
 ae = FairAE(latent_dim=128, sensitive_dim=10)
