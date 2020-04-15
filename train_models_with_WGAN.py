@@ -51,7 +51,7 @@ if __name__ == "__main__":
     iteration = 0
     diter = 5
     start = time()
-    one = torch.FloatTensor([1]*64)
+    one = torch.FloatTensor([1]*64) if not torch.cuda.is_available() else torch.cuda.FloatTensor([1]*64)
     minus_one = one * -1
     label = torch.full((64,), cfg["real_label"], device=device)
 
@@ -80,14 +80,14 @@ if __name__ == "__main__":
                 Z_mu = Z_mu.detach()
                 Z_logvar = Z_logvar.detach()
                 # Real
-                label = torch.full((b_size,), cfg["real_label"], device=device)
+                # label = torch.full((b_size,), cfg["real_label"], device=device)
                 _, Dis_X = netD(X)
                 errD_real = Dis_X.view(-1)
                 errD_real.backward(one)
 
                 # Fake
                 X_tilde = netG(Z_mu)
-                label.fill_(cfg["fake_label"]).to(device)
+                # label.fill_(cfg["fake_label"]).to(device)
                 _, Dis_X_tilde = netD(X_tilde)
                 errD_fake = Dis_X_tilde.view(-1)
                 errD_fake.backward(minus_one)
@@ -95,7 +95,7 @@ if __name__ == "__main__":
                 # Sampled
                 Zp = reparameterize(Z_mu, Z_logvar)
                 Xp = netG(Zp).detach()
-                label.fill_(cfg["fake_label"]).to(device)
+                # label.fill_(cfg["fake_label"]).to(device)
                 _, Dis_Xp = netD(Xp)
                 # Dis_Xp = Dis_Xp.view(-1)
                 # errD_resamp = calc_BCE_loss(Dis_Xp, label)
