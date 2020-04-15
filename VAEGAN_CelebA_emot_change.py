@@ -36,7 +36,6 @@ from utils import get_dataset, get_model_and_optimizer, save_images, reparameter
     plot_real_vs_fake, get_dataset_celeba
 
 
-
 def get_lab(labs, id):
     return np.array(labs[labs["image_id"] == id]["lab"])[0]
 
@@ -51,12 +50,13 @@ def get_lab_df(filepath):
             columns={0: "image_id", 1: "Angry", 2: "Disgust", 3: "Fear", 4: "Happy", 5: "Sad", 6: "Surprise",
                      7: "Neutral"})
         # Could add filter based on confidence of prediction here
-        expression_order= ["Angry", "Disgust", "Fear", "Happy", "Sad", "Surprise", "Neutral"]
+        expression_order = ["Angry", "Disgust", "Fear", "Happy", "Sad", "Surprise", "Neutral"]
 
         lab_df['lab'] = lab_df[expression_order].idxmax(axis=1)
     elif 'ExpW' in filepath:
         lab_df = pd.read_csv(filepath, header=None)
-        expression_order = ['neutral', 'happiness', 'surprise', 'sadness', 'anger', 'disgust', 'fear', 'contempt', 'unknown']
+        expression_order = ['neutral', 'happiness', 'surprise', 'sadness', 'anger', 'disgust', 'fear', 'contempt',
+                            'unknown']
         lab_df = lab_df.rename(
             columns={0: "image_id", 1: "size", 2: "usage", 3: 'neutral', 4: 'happiness', 5: 'surprise', 6: 'sadness',
                      7: 'anger', 8: 'disgust', 9: 'fear', 10: 'contempt', 11: 'unknown'})

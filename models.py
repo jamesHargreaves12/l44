@@ -39,13 +39,13 @@ class Generator(nn.Module):
     def __init__(self, ngpu, cfg):
         super(Generator, self).__init__()
         self.ngpu = ngpu
-        nz = cfg["nz"]
+        self.nz = cfg["nz"]
         ngf = cfg["ngf"]
         nc = cfg["nc"]
         kernel_size_dyn = cfg['image_size'] // 16
         self.main = nn.Sequential(
             # input is Z, going into a convolution
-            nn.ConvTranspose2d(nz, ngf * 8, kernel_size_dyn, 1, 0, bias=False),
+            nn.ConvTranspose2d(self.nz, ngf * 8, kernel_size_dyn, 1, 0, bias=False),
             nn.BatchNorm2d(ngf * 8),
             nn.ReLU(True),
             # state size. (ngf*8) x 3 x 3
@@ -67,6 +67,7 @@ class Generator(nn.Module):
         )
 
     def forward(self, input):
+        input = input.view(-1, self.nz, 1, 1)
         return self.main(input)
 
 
