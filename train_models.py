@@ -76,13 +76,13 @@ if __name__ == "__main__":
             errD_fake = calc_BCE_loss(Dis_X_tilde, label)
             errD_fake.backward()
 
-            Dis_l_X = Dis_l_X.view(-1)
-            Dis_l_X = torch.where(torch.isnan(Dis_l_X), torch.zeros_like(Dis_l_X), Dis_l_X)
+            # Dis_l_X = Dis_l_X.view(-1)
+            # Dis_l_X = torch.where(torch.isnan(Dis_l_X), torch.zeros_like(Dis_l_X), Dis_l_X)
 
             # Sampled
             Zp = reparameterize(Z_mu, Z_logvar)
             Xp = netG(Zp).detach()
-            label.fill_(cfg["fake_label"]).to(device)
+            # label.fill_(cfg["fake_label"]).to(device)
             _, Dis_Xp = netD(Xp)
             Dis_Xp = Dis_Xp.view(-1)
             errD_resamp = calc_BCE_loss(Dis_Xp, label)

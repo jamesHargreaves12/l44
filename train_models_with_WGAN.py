@@ -47,16 +47,17 @@ if __name__ == "__main__":
     calc_MSE_loss = nn.MSELoss()
 
     test_batch = next(iter(dataloader))
+
     test_imgs = test_batch[0].to(device)[:64]
     iteration = 0
     diter = 5
     start = time()
     # label = torch.full((64,), cfg["real_label"], device=device)
 
-    data_iter = iter(dataloader)
     for epoch in range(cfg["num_epoch"]):
         print("Epoch:", epoch)
-        i = 0
+        data_iter = iter(dataloader)
+        i = 1
         while i < len(dataloader):
             for p in netD.parameters():  # reset requires_grad
                 p.requires_grad = True  # they are set to False below in netG update
