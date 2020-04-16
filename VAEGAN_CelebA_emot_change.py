@@ -85,7 +85,7 @@ if __name__ == "__main__":
     # lab_iter = iter(labs)
     # output_file = open("data/latent_to_emotion.csv", "w+")
     with torch.no_grad():
-        for i, data in tqdm(enumerate(list(dataloader), 0)):
+        for i, data in tqdm(enumerate(dataloader, 0)):
             if not torch.cuda.is_available() and i > 500 and cfg["speedup_emot_change"]:
                 break
             X = data[0].to(device)
