@@ -107,7 +107,7 @@ if __name__ == "__main__":
     with torch.no_grad():
         for emotion in average_emotion.keys():
             input_mu = torch.from_numpy(average_emotion[emotion])
-            reshape = input_mu.reshape([1, cfg['nz'], 1, 1]).float()
+            reshape = input_mu.reshape([1, cfg['nz'], 1, 1]).float().to(device)
             fake = netG(reshape)
             img = vutils.make_grid(fake, padding=5, normalize=True).cpu()
             plt.imshow(np.transpose(img, (1, 2, 0)))
@@ -133,7 +133,7 @@ if __name__ == "__main__":
             for emotion in average_emotion.keys():
                 if emotion == test_label:
                     # fake = fakes_no_change[attempt]
-                    fake = netG(Z_mus.reshape(-1, cfg['nz'], 1, 1))[attempt]
+                    fake = netG(Z_mus.reshape(-1, cfg['nz'], 1, 1).to(device))[attempt]
                     result[emotion] = fake
                 else:
                     Z_mu_changed = Z_mu_np.copy()
