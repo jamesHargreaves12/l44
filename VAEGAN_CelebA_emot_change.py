@@ -33,7 +33,7 @@ from tqdm import tqdm
 
 from models import Encoder, Generator, Discriminator, initialise, VariationalEncoder
 from utils import get_dataset, get_model_and_optimizer, save_images, reparameterize, loss_function_kld, \
-    plot_real_vs_fake, get_dataset_celeba
+    plot_real_vs_fake
 
 
 def get_lab(labs, id):
@@ -66,21 +66,26 @@ def get_lab_df(filepath):
 
 
 if __name__ == "__main__":
-    cfg = yaml.load(open("config_expw.yaml"))
+    parser = argparse.ArgumentParser()
+    parser.add_argument('config_file', help='config file name')
+    args = parser.parse_args()
+
+    # Root directory for dataset
+    cfg = yaml.load(open(args.config_file))
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
     dataloader = get_dataset(cfg, shuffle=False)
     lab_df = get_lab_df(cfg['label_csv_path'])
 
-    netG, optimizerG = get_model_and_optimizer(Generator, cfg["gen_path"], cfg)
     netE, optimizerE = get_model_and_optimizer(VariationalEncoder, cfg["enc_path"], cfg)
+    netG, optimizerG = get_model_and_optimizer(Generator, cfg["gen_path"], cfg)
 
     emotion_latents = defaultdict(list)
     # lab_iter = iter(labs)
     # output_file = open("data/latent_to_emotion.csv", "w+")
     with torch.no_grad():
-        for i, data in tqdm(enumerate(dataloader, 0)):
+        for i, data in tqdm(enumerate(list(dataloader), 0)):
             if not torch.cuda.is_available() and i > 500 and cfg["speedup_emot_change"]:
                 break
             X = data[0].to(device)
