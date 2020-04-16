@@ -51,9 +51,7 @@ if __name__ == "__main__":
     iteration = 0
     diter = 5
     start = time()
-    one = torch.FloatTensor([1]*64) if not torch.cuda.is_available() else torch.cuda.FloatTensor([1]*64)
-    minus_one = one * -1
-    label = torch.full((64,), cfg["real_label"], device=device)
+    # label = torch.full((64,), cfg["real_label"], device=device)
 
     data_iter = iter(dataloader)
     for epoch in range(cfg["num_epoch"]):
@@ -74,6 +72,8 @@ if __name__ == "__main__":
 
                 X = data[0].to(device)
                 b_size = X.size(0)
+                one = torch.FloatTensor([1]*b_size) if not torch.cuda.is_available() else torch.cuda.FloatTensor([1]*b_size)
+                minus_one = one * -1
 
                 # Update the Discriminator Network
                 netD.zero_grad()
