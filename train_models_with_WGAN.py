@@ -67,6 +67,7 @@ if __name__ == "__main__":
             while j < diter and i < len(dataloader):
                 j += 1
                 i += 1
+                iteration += 1
                 data = next(data_iter)
                 for p in netD.parameters():
                     p.data.clamp_(-0.01, 0.01)
@@ -153,7 +154,7 @@ if __name__ == "__main__":
             optimizerE.step()
 
             # # Output training stats
-            if iteration % cfg["image_rate"] < diter or ((epoch == cfg["num_epoch"] - 1) and (i == len(dataloader) - 1)):
+            if (iteration-1) % cfg["image_rate"] < diter or ((epoch == cfg["num_epoch"] - 1) and (i == len(dataloader) - 1)):
                 out_format = "Time: {:.1f} {:d}/{:d}\tLoss_D: {:.4f}\tLoss_G: {:.4f}\tLoss_E: {:.4f}"
                 print(
                     out_format.format(time() - start, i, len(dataloader), errD.data.mean(), errG.data.mean(), errE.item()))
@@ -167,7 +168,6 @@ if __name__ == "__main__":
                 plot_real_vs_fake(test_imgs, fake_imgs, show=False,
                                   save_path="output_images/WGAN_out_{}_{}.png"
                                   .format(epoch, i))
-            iteration += 1
         print("Saving")
         torch.save(netG.state_dict(), cfg["gen_path"])
         torch.save(netD.state_dict(), cfg["dis_path"])
