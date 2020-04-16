@@ -123,12 +123,12 @@ if __name__ == "__main__":
             Dis_l_X_tilde, Dis_X_tilde = netD(X_tilde)
 
             Xp = netG(Zp)
-            label.fill_(cfg["fake_label"]).to(device)
+            # label.fill_(cfg["fake_label"]).to(device)
             _, Dis_Xp = netD(Xp)
             Dis_Xp = Dis_Xp.view(-1)
 
             err_content = calc_MSE_loss(Dis_l_X_tilde.view(-1), Dis_l_X.view(-1))
-            label.fill_(cfg["real_label"]).to(device)
+            # label.fill_(cfg["real_label"]).to(device)
             errG_style_1 = Dis_X_tilde.view(-1)
             errG_style_2 = Dis_Xp.view(-1)
             # errG_style_1 = calc_BCE_loss(Dis_X_tilde.view(-1), label)
