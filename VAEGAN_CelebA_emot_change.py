@@ -117,14 +117,26 @@ if __name__ == "__main__":
             for key, val in average_emotion.items():
                 np.save(cfg["avg_latent_save_loc"].format(key), val)
 
+    average_emotion_images = {}
     with torch.no_grad():
         for emotion in average_emotion.keys():
             input_mu = torch.from_numpy(average_emotion[emotion])
             reshape = input_mu.reshape([1, cfg['nz'], 1, 1]).float().to(device)
             fake = netG(reshape)
             img = vutils.make_grid(fake, padding=5, normalize=True).cpu()
+            average_emotion_images[emotion] = img
             plt.imshow(np.transpose(img, (1, 2, 0)))
             plt.savefig("output_images/emotion_{}.png".format(emotion))
+
+    fig, axarr = plt.subplots(1, len(average_emotion_images.keys()), constrained_layout=False)
+    keys = list(average_emotion_images.keys())
+    for i, k in enumerate(keys):
+        axarr[i].title.set_text(k)
+        axarr[i].imshow(np.transpose(average_emotion_images[k], (1, 2, 0)))
+        axarr[i].set_xticklabels([])
+        axarr[i].set_yticklabels([])
+    fig.subplots_adjust(hspace=0.05, wspace=0.05)
+    plt.savefig("output_images/average_emotions.png")
 
     # I think the issue is that this network contains batch normalisation layer
     num_attempts = 8
