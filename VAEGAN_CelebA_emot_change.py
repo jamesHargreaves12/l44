@@ -72,6 +72,8 @@ def get_lab_df(filepath):
         expression_order = ["Angry", "Disgust", "Fear", "Happy", "Sad", "Surprise", "Neutral"]
         lab_df['lab'] = np.array(expression_order)[lab_df['lab_int']]
         labels = expression_order
+    else:
+        raise ValueError("Unknown filepath: {}".format(filepath))
 
     return lab_df[["image_id", "lab"]], labels
 
