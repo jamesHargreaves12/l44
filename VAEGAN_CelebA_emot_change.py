@@ -31,6 +31,7 @@ import yaml
 from IPython.display import HTML
 from tqdm import tqdm
 
+from emotion_classif_test import get_image_label
 from models import Encoder, Generator, Discriminator, initialise, VariationalEncoder
 from utils import get_dataset, get_model_and_optimizer, save_images, reparameterize, loss_function_kld, \
     plot_real_vs_fake
@@ -72,6 +73,8 @@ def get_lab_df(filepath):
         expression_order = ["Angry", "Disgust", "Fear", "Happy", "Sad", "Surprise", "Neutral"]
         lab_df['lab'] = np.array(expression_order)[lab_df['lab_int']]
         labels = expression_order
+    elif filepath == 'ignore':
+        return None, ["Angry", "Disgust", "Fear", "Happy", "Sad", "Surprise", "Neutral"]
     else:
         raise ValueError("Unknown filepath: {}".format(filepath))
 
@@ -112,9 +115,17 @@ if __name__ == "__main__":
                 X = data[0].to(device)
                 filenames = data[2]
                 Z_mu, _ = netE(X)
-                for z, fname in zip(Z_mu.cpu().numpy(), filenames):
-                    lab = get_lab(lab_df, fname)
-                    emotion_latents[lab].append(z)
+
+                if lab_df is not None:
+                    for z, fname in zip(Z_mu.cpu().numpy(), filenames):
+                        lab = get_lab(lab_df, fname)
+                        emotion_latents[lab].append(z)
+                else:
+                    fake_imgs = netG(Z_mu)
+                    for img, z in zip(fake_imgs, Z_mu):
+                        lab = labels[get_image_label(img)]
+                        emotion_latents[lab].append(z)
+
                     # output_file.write(",".join([str(x) for x in z]) + "," + lab + "\n")
         # output_file.close()
 
