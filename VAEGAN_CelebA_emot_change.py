@@ -64,6 +64,14 @@ def get_lab_df(filepath):
                      7: 'anger', 8: 'disgust', 9: 'fear', 10: 'contempt', 11: 'unknown'})
         lab_df['lab'] = lab_df[expression_order].idxmax(axis=1)
         labels = expression_order
+    elif 'FER' in filepath:
+        labs = open(filepath, 'r').read().split(",")
+        labs = [int(x) for x in labs]
+        names = ['fer{}.png'.format("0" * (7 - len(str(i))) + str(i)) for i in range(len(labs))]
+        lab_df = pd.DataFrame.from_dict({"image_id": names, "lab_int": labs})
+        expression_order = ["Angry", "Disgust", "Fear", "Happy", "Sad", "Surprise", "Neutral"]
+        lab_df['lab'] = np.array(expression_order)[lab_df['lab_int']]
+        labels = expression_order
 
     return lab_df[["image_id", "lab"]], labels
 
