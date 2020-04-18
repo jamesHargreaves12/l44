@@ -44,6 +44,7 @@ def get_lab_df(filepath):
     if 'list_attr_celeba.csv' in filepath:
         lab_df = pd.read_csv(filepath)
         lab_df['lab'] = lab_df["Smiling"].map(lambda x: "Smiling" if x == 1 else "Not Smiling")
+        labels = ["Smiling", "Not Smiling"]
     elif 'output_classif.csv' in filepath:
         lab_df = pd.read_csv(filepath, header=None)
         lab_df = lab_df.rename(
@@ -52,6 +53,7 @@ def get_lab_df(filepath):
         # Could add filter based on confidence of prediction here
         expression_order = ["Angry", "Disgust", "Fear", "Happy", "Sad", "Surprise", "Neutral"]
 
+        labels = expression_order
         lab_df['lab'] = lab_df[expression_order].idxmax(axis=1)
     elif 'ExpW' in filepath:
         lab_df = pd.read_csv(filepath, header=None)
@@ -61,8 +63,9 @@ def get_lab_df(filepath):
             columns={0: "image_id", 1: "size", 2: "usage", 3: 'neutral', 4: 'happiness', 5: 'surprise', 6: 'sadness',
                      7: 'anger', 8: 'disgust', 9: 'fear', 10: 'contempt', 11: 'unknown'})
         lab_df['lab'] = lab_df[expression_order].idxmax(axis=1)
+        labels = expression_order
 
-    return lab_df[["image_id", "lab"]]
+    return lab_df[["image_id", "lab"]], labels
 
 
 if __name__ == "__main__":
@@ -76,7 +79,7 @@ if __name__ == "__main__":
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
     dataloader = get_dataset(cfg, shuffle=False)
-    lab_df = get_lab_df(cfg['label_csv_path'])
+    lab_df, labels = get_lab_df(cfg['label_csv_path'])
 
     netE, optimizerE = get_model_and_optimizer(VariationalEncoder, cfg["enc_path"], cfg)
     netG, optimizerG = get_model_and_optimizer(Generator, cfg["gen_path"], cfg)
@@ -84,26 +87,36 @@ if __name__ == "__main__":
     emotion_latents = defaultdict(list)
     # lab_iter = iter(labs)
     # output_file = open("data/latent_to_emotion.csv", "w+")
-    with torch.no_grad():
-        for i, data in tqdm(enumerate(dataloader, 0)):
-            if not torch.cuda.is_available() and i > 500 and cfg["speedup_emot_change"]:
-                break
-            X = data[0].to(device)
-            filenames = data[2]
-            Z_mu, _ = netE(X)
-            for z, fname in zip(Z_mu.cpu().numpy(), filenames):
-                lab = get_lab(lab_df, fname)
-                emotion_latents[lab].append(z)
-                # output_file.write(",".join([str(x) for x in z]) + "," + lab + "\n")
-    # output_file.close()
 
     average_emotion = {}
-    for emotion in emotion_latents.keys():
-        df_mu = pd.DataFrame([x for x in emotion_latents[emotion]])
-        df_mu_average = df_mu.mean().to_numpy()
-        average_emotion[emotion] = df_mu_average
+    if cfg.get("avg_latent_save_loc", False) and os.path.exists(cfg["avg_latent_save_loc"].format(labels[0])):
+        for emot in labels:
+            path = cfg["avg_latent_save_loc"].format(emot)
+            if os.path.exists(path):
+                average_emotion[emot] = np.load(path)
+    else:
+        with torch.no_grad():
+            for i, data in tqdm(enumerate(dataloader, 0)):
+                if not torch.cuda.is_available() and i > 500 and cfg["speedup_emot_change"]:
+                    break
+                X = data[0].to(device)
+                filenames = data[2]
+                Z_mu, _ = netE(X)
+                for z, fname in zip(Z_mu.cpu().numpy(), filenames):
+                    lab = get_lab(lab_df, fname)
+                    emotion_latents[lab].append(z)
+                    # output_file.write(",".join([str(x) for x in z]) + "," + lab + "\n")
+        # output_file.close()
 
-    # Trying to find the average person with each emotion - poor results:
+        for emotion in emotion_latents.keys():
+            df_mu = pd.DataFrame([x for x in emotion_latents[emotion]])
+            df_mu_average = df_mu.mean().to_numpy()
+            average_emotion[emotion] = df_mu_average
+
+        if cfg.get("avg_latent_save_loc", False):
+            for key, val in average_emotion.items():
+                np.save(cfg["avg_latent_save_loc"].format(key), val)
+
     with torch.no_grad():
         for emotion in average_emotion.keys():
             input_mu = torch.from_numpy(average_emotion[emotion])
