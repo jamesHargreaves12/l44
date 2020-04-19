@@ -175,9 +175,13 @@ if __name__ == "__main__":
 
         for attempt in tqdm(range(num_attempts)):
             fname = test_batch[2][attempt]
-            test_label = get_lab(lab_df, fname)
             result = {"Original": X[attempt]}
             Z_mu_np = Z_mus.cpu().numpy()
+            if lab_df:
+                test_label = get_lab(lab_df, fname)
+            else:
+                fake = netG(Z_mus.reshape(-1, cfg['nz'], 1, 1).to(device))[attempt]
+                test_label = labels[get_image_label(fake)]
             for emotion in average_emotion.keys():
                 if emotion == test_label:
                     # fake = fakes_no_change[attempt]
