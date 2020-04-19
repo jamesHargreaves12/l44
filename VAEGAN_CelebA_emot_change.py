@@ -139,8 +139,10 @@ if __name__ == "__main__":
                 np.save(cfg["avg_latent_save_loc"].format(key), val)
 
     average_emotion_images = {}
+    print(average_emotion.keys())
     with torch.no_grad():
-        for emotion in average_emotion.keys():
+        for emotion in ["Angry", "Happy", "Neutral", "Sad", "Surprise", "Fear"]:
+            # for emotion in average_emotion.keys():
             input_mu = torch.from_numpy(average_emotion[emotion])
             reshape = input_mu.reshape([1, cfg['nz'], 1, 1]).float().to(device)
             fake = netG(reshape)
