@@ -100,7 +100,7 @@ if __name__ == "__main__":
     emotion_latents = defaultdict(list)
     # lab_iter = iter(labs)
     # output_file = open("data/latent_to_emotion.csv", "w+")
-
+    emotion_order = ["Angry", "Happy", "Neutral", "Sad", "Surprise", "Fear"]
     average_emotion = {}
     if cfg.get("avg_latent_save_loc", False) and os.path.exists(cfg["avg_latent_save_loc"].format(labels[0])):
         for emot in labels:
@@ -141,7 +141,7 @@ if __name__ == "__main__":
     average_emotion_images = {}
     print(average_emotion.keys())
     with torch.no_grad():
-        for emotion in ["Angry", "Happy", "Neutral", "Sad", "Surprise", "Fear"]:
+        for emotion in emotion_order:
             # for emotion in average_emotion.keys():
             input_mu = torch.from_numpy(average_emotion[emotion])
             reshape = input_mu.reshape([1, cfg['nz'], 1, 1]).float().to(device)
@@ -182,7 +182,7 @@ if __name__ == "__main__":
             else:
                 fake = netG(Z_mus.reshape(-1, cfg['nz'], 1, 1).to(device))[attempt]
                 test_label = labels[get_image_label(fake)]
-            for emotion in average_emotion.keys():
+            for emotion in emotion_order:
                 if emotion == test_label:
                     # fake = fakes_no_change[attempt]
                     fake = netG(Z_mus.reshape(-1, cfg['nz'], 1, 1).to(device))[attempt]
