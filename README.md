@@ -1,5 +1,6 @@
+#This code is located at github.com/jamesHargreaves12/l44 please use latest version from here before running tests
 Run Test
-Stepes: 
+Steps: 
 - python3 -m venv venv
 - source venv/bin/activate
 - pip3 install -r requirements.txt
