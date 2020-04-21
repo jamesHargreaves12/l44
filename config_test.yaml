@@ -1,0 +1,27 @@
+gen_path: "models/Gen.trc"
+dis_path: "models/Dis.trc"
+enc_path: "models/Enc.trc"
+
+
+dataroot: "data/FER"
+with_augmentation: false
+grayscale: true
+RMSprop: true
+#label_csv_path: 'data/celeba/list_attr_celeba.csv'
+label_csv_path: 'data/FERlabs.txt'
+image_rate: 10
+num_epoch: 1
+image_size: 48
+batch_size: 64
+nc: 1
+nz: 512
+ngf: 64
+ndf: 64
+lr: 0.0003
+beta1: 0.5
+real_label: 1
+fake_label: 0
+lambda_val: 0.1
+num_labs: 7
+speedup_emot_change: false
+avg_latent_save_loc: "models/emotion_average_{}_classif.npy"

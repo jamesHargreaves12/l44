@@ -38,6 +38,9 @@ from utils import get_dataset, get_model_and_optimizer, save_images, reparameter
 
 
 def get_lab(labs, id):
+    if id not in labs["image_id"]:
+        num = id.split('.')[0]
+        id = 'fer{}.png'.format('0'*(7-len(num)) + num)
     return np.array(labs[labs["image_id"] == id]["lab"])[0]
 
 
@@ -177,7 +180,7 @@ if __name__ == "__main__":
             fname = test_batch[2][attempt]
             result = {"Original": X[attempt]}
             Z_mu_np = Z_mus.cpu().numpy()
-            if lab_df:
+            if lab_df is not None:
                 test_label = get_lab(lab_df, fname)
             else:
                 fake = netG(Z_mus.reshape(-1, cfg['nz'], 1, 1).to(device))[attempt]
