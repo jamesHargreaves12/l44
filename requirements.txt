@@ -15,7 +15,7 @@ cycler==0.10.0
 Cython==0.29.16
 decorator==4.4.2
 defusedxml==0.6.0
-Django==3.0.4
+Django==3.1.13
 entrypoints==0.3
 flow==0.0.1
 gast==0.2.2
